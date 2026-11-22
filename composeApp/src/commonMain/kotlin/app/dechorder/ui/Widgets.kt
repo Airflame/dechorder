@@ -61,7 +61,7 @@ fun GroupBox(title: String, modifier: Modifier = Modifier, content: @Composable 
     }
 }
 
-/** A rounded dark panel like Chordfinder's player display. */
+/** A rounded dark panel. */
 @Composable
 fun Panel(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     Box(

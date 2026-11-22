@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 
-/** Colours after Chordfinder's dark Qt look. */
+/** The app's dark colour scheme. */
 object Palette {
     val Window = Color(0xFF1E1E1E)
     val Base = Color(0xFF262626)         // cards, tables, inputs
@@ -16,7 +16,7 @@ object Palette {
     val Text = Color(0xFFEDEDED)
     val TextDim = Color(0xFF9A9A9A)
     val TextFaint = Color(0xFF6B6B6B)
-    val Accent = Color(0xFF2EE07A)       // the green of Chordfinder's progress bars and sliders
+    val Accent = Color(0xFF2EE07A)       // green, for lit keys, sliders and the level bar
     val AccentDark = Color(0xFF1B8F4C)
     val Playhead = Color(0xFFE5484D)
     val Selection = Color(0xFF34393F)

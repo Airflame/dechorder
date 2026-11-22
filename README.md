@@ -15,7 +15,7 @@ codebase (Kotlin Multiplatform + Compose Multiplatform) and is fully offline.
 | `dsp`    | FFT, spectral peaks (8192-sample Hann window, hop 2048), polyphonic note detection by harmonic salience with iterative cancellation |
 | `music`  | Note names and chord naming: every root × quality (triads, 6ths, 7ths, 9ths, sus, power chords…) is scored against the notes heard; the lowest note decides inversions (C/E) |
 | `engine` | Smooths notes over frames, settles the displayed chord (it changes once a new chord has sounded for the "chord change delay"; a fading chord is not mistaken for a new one) |
-| `ui`     | Compose UI in the dark style of Chordfinder: chord display, piano keyboard, settings          |
+| `ui`     | Compose UI with a dark theme: chord display, piano keyboard, settings                          |
 
 Platform code: `androidMain` (AudioRecord, unprocessed mic source) and `desktopMain` (Java Sound;
 any capture device can be chosen, including "Stereo Mix" to analyse the computer's own playback).
