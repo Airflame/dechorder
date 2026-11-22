@@ -2,8 +2,7 @@
 
 Listens through the microphone, names the chord being played and lights up its notes on a piano
 keyboard. Runs on Android phones/tablets and on the desktop (Windows, macOS, Linux) from one Kotlin
-codebase (Kotlin Multiplatform + Compose Multiplatform). Fully offline: there is no network code and
-the Android app doesn't request the INTERNET permission.
+codebase (Kotlin Multiplatform + Compose Multiplatform) and is fully offline.
 
 <img src="resources/screenshot-phone.png" alt="Dechorder on a phone-sized screen, showing Dm7 with D, F, A and C lit on the keyboard" width="300">
 
