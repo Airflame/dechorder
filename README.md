@@ -5,6 +5,8 @@ keyboard. Runs on Android phones/tablets and on the desktop (Windows, macOS, Lin
 codebase (Kotlin Multiplatform + Compose Multiplatform). Fully offline: there is no network code and
 the Android app doesn't request the INTERNET permission.
 
+<img src="resources/screenshot-phone.png" alt="Dechorder on a phone-sized screen, showing Dm7 with D, F, A and C lit on the keyboard" width="300">
+
 ## How it works
 
 `composeApp/src/commonMain/kotlin/app/dechorder/`
