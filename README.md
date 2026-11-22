@@ -52,3 +52,7 @@ publishing.
 - **Ignore sounds below**: noise gate; raise it in a noisy room.
 - **Chord change delay**: how long a new chord must sound before it is shown.
 - **Keyboard**: 37 to 88 keys, or fit to the screen; note names on lit keys.
+
+## LLMs used for development
+
+- Claude Opus 5.5
