@@ -22,6 +22,10 @@ import app.dechorder.music.Notes
 /**
  * A piano keyboard from [low] to [high] (MIDI numbers, both white keys) whose keys light up for the
  * notes sounding. Brighter means louder; the lowest note (the bass) is marked with a dot.
+ *
+ * When the keyboard is shown in several rows, [slots] is the number of white keys the widest row has
+ * (so all rows have keys of the same size, left-aligned) and [fullLow]..[fullHigh] is the range of
+ * all rows together: only notes outside it get an arrow.
  */
 @Composable
 fun PianoKeyboard(
@@ -30,6 +34,9 @@ fun PianoKeyboard(
     notes: List<ActiveNote>,
     showNames: Boolean,
     modifier: Modifier = Modifier,
+    slots: Int = 0,
+    fullLow: Int = low,
+    fullHigh: Int = high,
 ) {
     val measurer = rememberTextMeasurer()
     Canvas(modifier) {
@@ -39,7 +46,7 @@ fun PianoKeyboard(
         if (whites.isEmpty()) return@Canvas
         val felt = 4.dp.toPx()
         val top = felt
-        val whiteW = size.width / whites.size
+        val whiteW = size.width / maxOf(slots, whites.size)
         val whiteH = size.height - top
         val blackW = whiteW * 0.62f
         val blackH = whiteH * 0.62f
@@ -80,8 +87,8 @@ fun PianoKeyboard(
         }
 
         // Notes beyond the keys shown: an arrow at that end.
-        if (notes.any { it.midi < low }) arrow(left = true, top, whiteH)
-        if (notes.any { it.midi > high }) arrow(left = false, top, whiteH)
+        if (low == fullLow && notes.any { it.midi < fullLow }) arrow(left = true, top, whiteH)
+        if (high == fullHigh && notes.any { it.midi > fullHigh }) arrow(left = false, top, whiteH)
     }
 }
 
@@ -113,4 +120,31 @@ private fun DrawScope.arrow(left: Boolean, top: Float, height: Float) {
         close()
     }
     drawPath(path, Palette.Accent)
+}
+
+/**
+ * Splits [low]..[high] into a lower and an upper half for a two-row keyboard. The cut falls after a B or
+ * an E (no black key between the halves), as close to the middle as possible. Null if the range is too small.
+ */
+fun splitKeyboard(low: Int, high: Int): Pair<IntRange, IntRange>? {
+    val whites = (low..high).filter { !Notes.isBlack(it) }
+    val middle = (whites.size - 1) / 2.0
+    val cut = whites.indices
+        .filter { it in 2 until whites.size - 3 && Notes.pc(whites[it]) in setOf(4, 11) }
+        .minByOrNull { kotlin.math.abs(it - middle) + if (Notes.pc(whites[it]) == 11) 0.0 else 0.5 }
+        ?: return null
+    return whites.first()..whites[cut] to whites[cut + 1]..whites.last()
+}
+
+fun whiteCount(range: IntRange): Int = range.count { !Notes.isBlack(it) }
+
+/** Extends [range] upwards (downwards at the top of the MIDI range) until it has [whites] white keys. */
+fun extendKeyboard(range: IntRange, whites: Int): IntRange {
+    var low = range.first
+    var high = range.last
+    while (whiteCount(low..high) < whites) {
+        if (high < 108) { high++; while (Notes.isBlack(high)) high++ }
+        else { low--; while (Notes.isBlack(low)) low-- }
+    }
+    return low..high
 }

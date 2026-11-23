@@ -35,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.dechorder.engine.LiveListener
@@ -71,7 +70,7 @@ fun DechorderApp(platform: Platform) {
                 }
                 if (wide) {
                     Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Main(state, settings, range, compact = false, onListen = listener::toggle,
+                        Main(state, settings, range, compact = false, twoRows = false, onListen = listener::toggle,
                             settingsButton = null, modifier = Modifier.weight(1f).fillMaxHeight())
                         GroupBox("Settings", Modifier.width(340.dp).fillMaxHeight()) {
                             SettingsPanel(platform, settings, state, Modifier.fillMaxSize())
@@ -87,7 +86,8 @@ fun DechorderApp(platform: Platform) {
                         SettingsPanel(platform, settings, state, Modifier.fillMaxSize())
                     }
                 } else {
-                    Main(state, settings, range, compact = true, onListen = listener::toggle,
+                    // Portrait phone: the keyboard in two rows, so the keys are twice as wide.
+                    Main(state, settings, range, compact = true, twoRows = maxHeight > maxWidth, onListen = listener::toggle,
                         settingsButton = { showSettings = true }, modifier = Modifier.fillMaxSize())
                 }
             }
@@ -101,22 +101,41 @@ private fun Main(
     settings: AppSettings,
     range: KeyboardRange,
     compact: Boolean,
+    twoRows: Boolean,
     onListen: () -> Unit,
     settingsButton: (() -> Unit)?,
     modifier: Modifier,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Header(state, onListen, settingsButton)
-        GroupBox("Chord", Modifier.fillMaxWidth().weight(1f)) {
-            ChordCard(state, compact, Modifier.fillMaxWidth().weight(1f).heightIn(min = 120.dp, max = 260.dp))
-            BoxWithConstraints(Modifier.fillMaxWidth()) {
-                // Keys about six times as long as they are wide, like a real piano.
-                val whites = (range.low..range.high).count { !app.dechorder.music.Notes.isBlack(it) }
-                val keyboardHeight: Dp = (maxWidth / whites * 6).coerceIn(90.dp, if (compact) 150.dp else 200.dp)
-                PianoKeyboard(
-                    range.low, range.high, state.notes, settings.showNoteNames,
-                    Modifier.fillMaxWidth().height(keyboardHeight),
-                )
+        val rows = (if (twoRows) splitKeyboard(range.low, range.high) else null)
+            ?.let { (lower, upper) -> listOf(upper, lower) }   // treble above bass
+            ?: listOf(range.low..range.high)
+        val slots = rows.maxOf { whiteCount(it) }
+        val split = rows.size == 2
+        // One keyboard row: the card stops at 260 dp and the keyboard sits right under it, rather than
+        // leaving a tall empty card. Two rows (portrait phone): the card and the keyboard share the
+        // screen half-and-half.
+        GroupBox("Chord", Modifier.fillMaxWidth().weight(1f, fill = split)) {
+            val card = if (split) Modifier.weight(1f)
+            else Modifier.weight(1f, fill = false).heightIn(min = 120.dp, max = 260.dp)
+            ChordCard(state, Modifier.fillMaxWidth().then(card))
+            BoxWithConstraints(Modifier.fillMaxWidth().then(if (split) Modifier.weight(1f) else Modifier)) {
+                // One row: keys about six times as long as they are wide, like a real piano.
+                val singleHeight = (maxWidth / slots * 6).coerceIn(90.dp, if (compact) 150.dp else 200.dp)
+                Column(if (split) Modifier.fillMaxSize() else Modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val rowHeight = if (split) Modifier.weight(1f) else Modifier.height(singleHeight)
+                    for (row in rows) {
+                        // A shorter row is extended to the same length (the bass row then also shows the
+                        // first key or two of the treble row), so both rows end in line.
+                        val shown = extendKeyboard(row, slots)
+                        PianoKeyboard(
+                            shown.first, shown.last, state.notes, settings.showNoteNames,
+                            Modifier.fillMaxWidth().then(rowHeight),
+                            slots = slots, fullLow = range.low, fullHigh = range.high,
+                        )
+                    }
+                }
             }
             Text(
                 "${range.label}  ·  A4 = ${settings.a4} Hz",

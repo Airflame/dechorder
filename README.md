@@ -52,7 +52,8 @@ publishing.
 - **Sensitivity**: higher finds quieter notes but may add notes that aren't there.
 - **Ignore sounds below**: noise gate; raise it in a noisy room.
 - **Chord change delay**: how long a new chord must sound before it is shown.
-- **Keyboard**: 37 to 88 keys, or fit to the screen; note names on lit keys.
+- **Keyboard**: 37 to 88 keys, or fit to the screen; note names on lit keys. On a phone held upright the
+  keyboard is split into two rows (treble above bass) so the keys are big enough to read.
 
 ## LLMs used for development
 
