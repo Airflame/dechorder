@@ -17,9 +17,9 @@ object Palette {
     val TextDim = Color(0xFF9A9A9A)
     val TextFaint = Color(0xFF6B6B6B)
     val Accent = Color(0xFF2EE07A)       // green, for lit keys, sliders and the level bar
+    val OnAccent = Color(0xFF0B2A17)     // text and marks drawn on the accent
     val AccentDark = Color(0xFF1B8F4C)
     val Playhead = Color(0xFFE5484D)
-    val Selection = Color(0xFF34393F)
 
     val KeyWhite = Color(0xFFECECEC)
     val KeyWhiteEdge = Color(0xFFB9B9B9)
@@ -33,7 +33,7 @@ object Palette {
 fun DechorderTheme(content: @Composable () -> Unit) {
     val scheme = darkColorScheme(
         primary = Palette.Accent,
-        onPrimary = Color(0xFF0B2A17),
+        onPrimary = Palette.OnAccent,
         secondary = Palette.Accent,
         background = Palette.Window,
         onBackground = Palette.Text,

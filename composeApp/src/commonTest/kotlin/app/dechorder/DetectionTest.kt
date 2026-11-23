@@ -25,7 +25,7 @@ class DetectionTest {
     }
 
     private fun listen(audio: FloatArray, config: EngineConfig = EngineConfig()): LiveState {
-        val engine = ChordEngine().apply { begin(Synth.RATE) }
+        val engine = ChordEngine(Synth.RATE)
         return run(engine, audio, config).last()
     }
 
@@ -86,15 +86,18 @@ class DetectionTest {
     @Test
     fun longDecayKeepsTheChord() {
         for (chord in listOf(midis("C3", "E3", "G3", "C4"), midis("E2", "B2", "E3", "G#3", "B3"), midis("D3", "A3", "D4", "F4"))) {
-            val engine = ChordEngine().apply { begin(Synth.RATE) }
+            val engine = ChordEngine(Synth.RATE)
             val names = shown(run(engine, Synth.notes(chord, 4.0)))
             assertEquals(1, names.size, "a fading chord was shown as several: $names")
         }
     }
 
-    @Test fun quietPlaying() = assertChord("Cm", "C3", "G3", "C4", "Eb4", config = EngineConfig()).also {
+    @Test fun minorTriad() = assertChord("Cm", "C3", "G3", "C4", "Eb4")
+
+    @Test
+    fun quietPlaying() {
         val state = listen(Synth.notes(midis("C3", "G3", "C4", "Eb4"), 1.0, amplitude = 0.01, noiseDb = -80.0))
-        assertEquals("Cm", symbol(state))
+        assertEquals("Cm", symbol(state), "notes heard: ${names(state)}")
     }
 
     @Test
@@ -105,7 +108,7 @@ class DetectionTest {
 
     @Test
     fun followsAProgression() {
-        val engine = ChordEngine().apply { begin(Synth.RATE) }
+        val engine = ChordEngine(Synth.RATE)
         val progression = listOf(
             midis("C3", "E3", "G3", "C4"),
             midis("F2", "A3", "C4", "F4"),
@@ -118,7 +121,7 @@ class DetectionTest {
 
     @Test
     fun clearsAfterSilence() {
-        val engine = ChordEngine().apply { begin(Synth.RATE) }
+        val engine = ChordEngine(Synth.RATE)
         run(engine, Synth.notes(midis("C3", "E3", "G3"), 1.0))
         assertEquals("none", symbol(run(engine, Synth.silence(1.0)).last()))
     }

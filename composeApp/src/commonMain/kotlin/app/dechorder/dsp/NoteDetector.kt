@@ -46,6 +46,26 @@ class NoteDetector(
     /** Harmonics counted in a note's salience; more are cancelled, so a bass note's high overtones don't become notes. */
     private val salienceHarmonics: Int = 8,
 ) {
+    private companion object {
+        /** A peak this close to an equal-tempered pitch (in semitones) proposes that note as a candidate. */
+        const val CANDIDATE_TOLERANCE_SEMITONES = 0.35
+        /**
+         * Piano-string stiffness: harmonic h sounds at h * f0 * sqrt(1 + INHARMONICITY * h²), so upper
+         * partials run sharp.
+         */
+        const val INHARMONICITY = 1e-4
+        /** How far a peak may be from a harmonic's expected frequency: this many cents for the fundamental… */
+        const val HARMONIC_TOLERANCE_CENTS = 35.0
+        /** …widened by this many cents for each harmonic above the fundamental. */
+        const val HARMONIC_TOLERANCE_CENTS_PER_STEP = 4.0
+        /** Harmonics are searched for up to this factor above the highest peak, to allow for the tolerance. */
+        const val SEARCH_MARGIN = 1.03
+        /** A note on another note's 5th, 7th, 9th… harmonic needs this many times [DetectionParams.minFundamentalDb]. */
+        const val OVERTONE_FUNDAMENTAL_FACTOR = 2
+        /** Cancelling a chosen note removes at least this share of each of its harmonics. */
+        const val MIN_CANCELLED_SHARE = 0.7
+    }
+
     fun detect(peaks: List<Peak>, a4: Double, params: DetectionParams): List<DetectedNote> {
         if (peaks.isEmpty()) return emptyList()
         val sorted = peaks.sortedBy { it.freq }
@@ -60,7 +80,7 @@ class NoteDetector(
         for (f in freq) {
             val m = Notes.midiOf(f, a4)
             val r = m.roundToInt()
-            if (abs(m - r) <= 0.35 && r in minMidi..maxMidi) isCandidate[r] = true
+            if (abs(m - r) <= CANDIDATE_TOLERANCE_SEMITONES && r in minMidi..maxMidi) isCandidate[r] = true
         }
 
         val result = ArrayList<DetectedNote>()
@@ -75,7 +95,7 @@ class NoteDetector(
                 if (!isCandidate[m]) continue
                 val count = match(m, a4, freq, residual, matched)
                 if (count == 0) continue
-                val needed = params.minFundamentalDb * if (overtone[matched[0]] > 3) 2 else 1
+                val needed = params.minFundamentalDb * if (overtone[matched[0]] > 3) OVERTONE_FUNDAMENTAL_FACTOR else 1
                 if (residual[matched[0]] < needed) continue
                 var sal = 0.0
                 for (h in 0 until minOf(count, salienceHarmonics)) if (matched[h] >= 0) sal += residual[matched[h]] / sqrt(h + 1.0)
@@ -105,10 +125,10 @@ class NoteDetector(
         val top = freq.last()
         var count = 0
         for (h in 1..maxHarmonics) {
-            // Piano strings are slightly inharmonic: upper partials run sharp.
-            val target = h * f0 * sqrt(1 + 1e-4 * h * h)
-            if (target > top * 1.03) break
-            val tolerance = 2.0.pow((35.0 + 4.0 * (h - 1)) / 1200.0)
+            val target = h * f0 * sqrt(1 + INHARMONICITY * h * h)
+            if (target > top * SEARCH_MARGIN) break
+            val cents = HARMONIC_TOLERANCE_CENTS + HARMONIC_TOLERANCE_CENTS_PER_STEP * (h - 1)
+            val tolerance = 2.0.pow(cents / 1200.0)
             out[h - 1] = strongestIn(freq, residual, target / tolerance, target * tolerance)
             count = h
             if (h == 1 && out[0] < 0) return 0
@@ -138,8 +158,9 @@ class NoteDetector(
 
     /**
      * Removes what the chosen note explains. Each harmonic keeps only what sticks out above the
-     * note's own spectral envelope (the mean of the neighbouring harmonics), and at most 30 %
-     * of its level: a harmonic much louder than its neighbours may be another note sounding there.
+     * note's own spectral envelope (the mean of the neighbouring harmonics), and at most
+     * 1 - [MIN_CANCELLED_SHARE] of its level: a harmonic much louder than its neighbours may be another
+     * note sounding there.
      */
     private fun cancel(matched: IntArray, count: Int, residual: DoubleArray, overtone: IntArray) {
         val level = DoubleArray(count) { if (matched[it] >= 0) residual[matched[it]] else -1.0 }
@@ -152,7 +173,7 @@ class NoteDetector(
                 if (k in 0 until count && level[k] >= 0) { sum += level[k]; n++ }
             }
             val envelope = if (n == 0) level[h] else sum / n
-            residual[j] = maxOf(0.0, level[h] - maxOf(envelope, 0.7 * level[h]))
+            residual[j] = maxOf(0.0, level[h] - maxOf(envelope, MIN_CANCELLED_SHARE * level[h]))
             if (h == 0) continue
             var odd = h + 1
             while (odd % 2 == 0) odd /= 2

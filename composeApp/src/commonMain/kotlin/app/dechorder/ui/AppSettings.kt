@@ -2,6 +2,7 @@ package app.dechorder.ui
 
 import androidx.compose.runtime.mutableStateOf
 import app.dechorder.engine.EngineConfig
+import app.dechorder.music.Notes
 import app.dechorder.platform.KeyValueStore
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -9,7 +10,7 @@ import kotlin.reflect.KProperty
 /** Keyboard sizes. AUTO picks one to suit the window width. */
 enum class KeyboardRange(val label: String, val low: Int, val high: Int) {
     AUTO("Fit to screen", 0, 0),
-    FULL("88 keys (A0–C8)", 21, 108),
+    FULL("88 keys (A0–C8)", Notes.PIANO_LOWEST, Notes.PIANO_HIGHEST),
     KEYS_76("76 keys (E1–G7)", 28, 103),
     KEYS_61("61 keys (C2–C7)", 36, 96),
     KEYS_49("49 keys (C2–C6)", 36, 84),

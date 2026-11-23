@@ -5,6 +5,7 @@ import app.dechorder.platform.Platform
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,7 +25,6 @@ class LiveListener(
     private val _state = MutableStateFlow(LiveState())
     val state: StateFlow<LiveState> = _state.asStateFlow()
 
-    private val engine = ChordEngine()
     private var job: Job? = null
 
     @Volatile private var input: AudioInput? = null
@@ -59,13 +59,12 @@ class LiveListener(
         val opened = platform.openInput(deviceId())
         input = opened
         try {
-            engine.begin(opened.sampleRate)
+            val engine = ChordEngine(opened.sampleRate)
             _state.update {
-                it.copy(listening = true, starting = false, error = null, inputName = opened.name,
-                    sampleRate = opened.sampleRate)
+                it.copy(listening = true, starting = false, error = null, inputName = opened.name)
             }
             val buffer = FloatArray(1024)
-            val context = kotlin.coroutines.coroutineContext
+            val context = currentCoroutineContext()
             while (context.isActive) {
                 val n = opened.read(buffer)
                 if (n < 0) break

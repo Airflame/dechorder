@@ -65,11 +65,11 @@ fun PianoKeyboard(
             drawRect(Palette.KeyWhiteEdge, Offset(x + whiteW - 1f, top), Size(1f, whiteH))
             val labelBottom = top + whiteH - 4.dp.toPx()
             if (s != null && showNames && whiteW >= 11.dp.toPx()) {
-                label(measurer, Notes.name(midi), x, whiteW, labelBottom, Color(0xFF0B2A17), bold = true)
+                label(measurer, Notes.name(midi), x, whiteW, labelBottom, Palette.OnAccent, bold = true)
             } else if (Notes.pc(midi) == 0 && whiteW >= 9.dp.toPx()) {
                 label(measurer, "C${Notes.octave(midi)}", x, whiteW, labelBottom, Palette.TextFaint, bold = false)
             }
-            if (midi == bass) dot(Offset(x + whiteW / 2, top + whiteH * 0.72f), whiteW, Color(0xFF0B2A17))
+            if (midi == bass) dot(Offset(x + whiteW / 2, top + whiteH * 0.72f), whiteW, Palette.OnAccent)
         }
 
         // Black keys, centred on the gap between their neighbours.
@@ -81,9 +81,9 @@ fun PianoKeyboard(
             val fill = if (s != null) Palette.mix(Palette.AccentDark, Palette.Accent, 0.4f + 0.6f * s) else Palette.KeyBlack
             drawRoundRect(fill, Offset(x, top), Size(blackW, blackH), CornerRadius(radius.x * 0.7f))
             if (s != null && showNames && blackW >= 9.dp.toPx()) {
-                label(measurer, Notes.name(midi), x, blackW, top + blackH - 4.dp.toPx(), Color(0xFF0B2A17), bold = true, small = true)
+                label(measurer, Notes.name(midi), x, blackW, top + blackH - 4.dp.toPx(), Palette.OnAccent, bold = true, small = true)
             }
-            if (midi == bass) dot(Offset(x + blackW / 2, top + blackH * 0.62f), blackW, Color(0xFF0B2A17))
+            if (midi == bass) dot(Offset(x + blackW / 2, top + blackH * 0.62f), blackW, Palette.OnAccent)
         }
 
         // Notes beyond the keys shown: an arrow at that end.
@@ -143,7 +143,7 @@ fun extendKeyboard(range: IntRange, whites: Int): IntRange {
     var low = range.first
     var high = range.last
     while (whiteCount(low..high) < whites) {
-        if (high < 108) { high++; while (Notes.isBlack(high)) high++ }
+        if (high < Notes.PIANO_HIGHEST) { high++; while (Notes.isBlack(high)) high++ }
         else { low--; while (Notes.isBlack(low)) low-- }
     }
     return low..high
