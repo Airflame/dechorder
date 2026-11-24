@@ -8,13 +8,24 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.dechorder.engine.LiveState
 import app.dechorder.platform.Platform
 import kotlin.math.roundToInt
+
+private const val GATE_MIN_DB = -80f
+private const val GATE_MAX_DB = -20f
+
+/** How far above the loudest background level calibration places the threshold. */
+private const val CALIBRATION_MARGIN_DB = 3f
 
 /** The settings: input, tuning, detection and display options. Changes are saved and apply at once. */
 @Composable
@@ -45,11 +56,31 @@ internal fun SettingsPanel(platform: Platform, settings: AppSettings, state: Liv
         AccentSlider(settings.sensitivity, { settings.sensitivity = it }, 0f..1f, Modifier.fillMaxWidth())
         Hint("Higher finds quieter notes but may add notes that aren't there.")
 
-        Text("Ignore sounds below ${settings.noiseGateDb.roundToInt()} dB", color = Palette.Text, fontSize = 13.sp)
-        AccentSlider(settings.noiseGateDb, { settings.noiseGateDb = it.roundToInt().toFloat() }, -80f..-20f,
+        var calibrating by remember { mutableStateOf(false) }
+        // While calibrating, push the threshold just above whatever the microphone hears. It only ever goes up,
+        // so leaving it on for a few seconds of room noise settles it above the loudest of it.
+        LaunchedEffect(calibrating, state.levelDb) {
+            if (calibrating && state.listening) {
+                val target = (state.levelDb + CALIBRATION_MARGIN_DB).roundToInt().toFloat().coerceAtMost(GATE_MAX_DB)
+                if (target > settings.noiseGateDb) settings.noiseGateDb = target
+            }
+        }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("Ignore sounds below ${settings.noiseGateDb.roundToInt()} dB", color = Palette.Text, fontSize = 13.sp,
+                modifier = Modifier.weight(1f))
+            FlatButton("Calibrate", { calibrating = !calibrating }, filled = calibrating)
+        }
+        AccentSlider(settings.noiseGateDb, { settings.noiseGateDb = it.roundToInt().toFloat() }, GATE_MIN_DB..GATE_MAX_DB,
             Modifier.fillMaxWidth())
         LevelBar(levelFraction(state.levelDb), Modifier.fillMaxWidth(), marker = levelFraction(settings.noiseGateDb))
-        Hint("The bar shows the input level now; the white mark is the threshold. Raise it in a noisy room.")
+        Hint(
+            when {
+                calibrating && !state.listening -> "Press Listen so calibration can hear the room."
+                calibrating -> "Calibrating: keep the room as it normally is and stay quiet, then switch Calibrate off."
+                else -> "The bar shows the input level now; the white mark is the threshold. Raise it in a noisy room, " +
+                    "or use Calibrate to set it automatically."
+            }
+        )
 
         Text("Chord change delay: ${settings.changeDelayMs} ms", color = Palette.Text, fontSize = 13.sp)
         AccentSlider(settings.changeDelayMs.toFloat(), { settings.changeDelayMs = (it / 10).roundToInt() * 10 },
@@ -63,6 +94,5 @@ internal fun SettingsPanel(platform: Platform, settings: AppSettings, state: Liv
         if (platform.isMobile) {
             CheckRow("Keep the screen on while listening", settings.keepScreenOn, { settings.keepScreenOn = it })
         }
-        Hint("Dechorder works entirely offline: the sound is analysed on this device and never sent anywhere.")
     }
 }

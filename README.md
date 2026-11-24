@@ -5,6 +5,7 @@ keyboard. Runs on Android phones/tablets and on the desktop (Windows, macOS, Lin
 codebase (Kotlin Multiplatform + Compose Multiplatform) and is fully offline.
 
 <img src="resources/screenshot-phone.png" alt="Dechorder on a phone-sized screen, showing Dm7 with D, F, A and C lit on the keyboard" width="300">
+<img src="resources/screenshot-settings.png" alt="The Dechorder settings screen on a phone-sized screen, with tuning, sensitivity, noise threshold with a Calibrate button, chord change delay and keyboard options" width="300">
 
 ## How it works
 
