@@ -7,7 +7,7 @@ codebase (Kotlin Multiplatform + Compose Multiplatform) and is fully offline.
 <table>
   <tr>
     <td><img src="resources/screenshot-phone.png" alt="Dechorder on a phone-sized screen, showing Dm7 with D, F, A and C lit on the keyboard" width="300"></td>
-    <td><img src="resources/screenshot-settings.png" alt="The Dechorder settings screen on a phone-sized screen, with tuning, sensitivity, noise threshold with a Calibrate button, chord change delay and keyboard options" width="300"></td>
+    <td><img src="resources/screenshot-settings.png" alt="The Dechorder settings screen on a phone-sized screen, with tuning, sensitivity, a note limit, noise threshold with a Calibrate button, chord change delay and keyboard options" width="300"></td>
   </tr>
 </table>
 
@@ -55,6 +55,8 @@ publishing.
 - **Input** (desktop): microphone or another capture device.
 - **Tuning**: reference A4 (415–466 Hz) for instruments not tuned to 440 Hz.
 - **Sensitivity**: higher finds quieter notes but may add notes that aren't there.
+- **Limit notes** (off by default): keeps only the strongest notes, 4 unless changed (1–8), for when
+  extra notes are picked up.
 - **Ignore sounds below**: noise gate; raise it in a noisy room.
 - **Chord change delay**: how long a new chord must sound before it is shown.
 - **Keyboard**: 37 to 88 keys, or fit to the screen; note names on lit keys. On a phone held upright the

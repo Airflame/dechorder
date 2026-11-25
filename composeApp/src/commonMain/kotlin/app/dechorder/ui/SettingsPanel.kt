@@ -3,7 +3,9 @@ package app.dechorder.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -55,6 +57,15 @@ internal fun SettingsPanel(platform: Platform, settings: AppSettings, state: Liv
         Text("Sensitivity: ${(settings.sensitivity * 100).roundToInt()}%", color = Palette.Text, fontSize = 13.sp)
         AccentSlider(settings.sensitivity, { settings.sensitivity = it }, 0f..1f, Modifier.fillMaxWidth())
         Hint("Higher finds quieter notes but may add notes that aren't there.")
+
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            CheckRow("Limit notes to ${settings.maxNotes}", settings.limitNotes, { settings.limitNotes = it },
+                Modifier.weight(1f))
+            FlatButton("−", { settings.maxNotes = (settings.maxNotes - 1).coerceAtLeast(MIN_NOTE_LIMIT) })
+            Spacer(Modifier.width(6.dp))
+            FlatButton("+", { settings.maxNotes = (settings.maxNotes + 1).coerceAtMost(MAX_NOTE_LIMIT) })
+        }
+        Hint("Keeps only the strongest notes when extra notes are picked up.")
 
         var calibrating by remember { mutableStateOf(false) }
         // While calibrating, push the threshold just above whatever the microphone hears. It only ever goes up,

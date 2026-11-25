@@ -125,4 +125,21 @@ class DetectionTest {
         run(engine, Synth.notes(midis("C3", "E3", "G3"), 1.0))
         assertEquals("none", symbol(run(engine, Synth.silence(1.0)).last()))
     }
+
+    @Test
+    fun noteLimitKeepsTheStrongestNotes() {
+        val chord = midis("C3", "E3", "G3", "B3", "D4", "F#4")
+        val unlimited = listen(Synth.notes(chord, 1.0))
+        assertTrue(unlimited.notes.size > 4, "expected more than 4 notes without a limit: ${names(unlimited)}")
+        val limited = listen(Synth.notes(chord, 1.0), EngineConfig(maxNotes = 4))
+        assertEquals(4, limited.notes.size, "notes heard: ${names(limited)}")
+        assertTrue(names(limited).all { it in names(unlimited) }, "limited ${names(limited)} vs ${names(unlimited)}")
+    }
+
+    @Test
+    fun noteLimitAboveTheChordSizeChangesNothing() {
+        val state = listen(Synth.notes(midis("D3", "F3", "A3", "C4"), 1.0), EngineConfig(maxNotes = 4))
+        assertEquals("Dm7", symbol(state), "notes heard: ${names(state)}")
+        assertEquals(listOf("D3", "F3", "A3", "C4"), names(state))
+    }
 }

@@ -17,12 +17,18 @@ enum class KeyboardRange(val label: String, val low: Int, val high: Int) {
     KEYS_37("37 keys (C3–C6)", 48, 84),
 }
 
+/** Range of the "limit the number of notes" setting (the detector finds at most 8 notes anyway). */
+const val MIN_NOTE_LIMIT = 1
+const val MAX_NOTE_LIMIT = 8
+
 /** User settings, observable by Compose and saved as they change. */
 class AppSettings(private val store: KeyValueStore) {
     var a4 by pref("a4", 440, String::toIntOrNull)
     var sensitivity by pref("sensitivity", 0.5f, String::toFloatOrNull)
     var noiseGateDb by pref("noiseGateDb", -60f, String::toFloatOrNull)
     var changeDelayMs by pref("changeDelayMs", 150, String::toIntOrNull)
+    var limitNotes by pref("limitNotes", false, String::toBooleanStrictOrNull)
+    var maxNotes by pref("maxNotes", 4) { v -> v.toIntOrNull()?.coerceIn(MIN_NOTE_LIMIT, MAX_NOTE_LIMIT) }
     var keyboardRange by pref("keyboardRange", KeyboardRange.AUTO) { v -> KeyboardRange.entries.firstOrNull { it.name == v } }
     var showNoteNames by pref("showNoteNames", true, String::toBooleanStrictOrNull)
     /** Input device id; empty = the system default. */
@@ -34,6 +40,7 @@ class AppSettings(private val store: KeyValueStore) {
         sensitivity = sensitivity.toDouble(),
         noiseGateDb = noiseGateDb.toDouble(),
         changeDelayMs = changeDelayMs,
+        maxNotes = if (limitNotes) maxNotes else null,
     )
 
     private fun <T> pref(key: String, default: T, parse: (String) -> T?): ReadWriteProperty<Any?, T> =

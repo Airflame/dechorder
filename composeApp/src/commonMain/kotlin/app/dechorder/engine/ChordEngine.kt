@@ -15,6 +15,8 @@ data class EngineConfig(
     val sensitivity: Double = 0.5,
     val noiseGateDb: Double = -60.0,
     val changeDelayMs: Int = 150,
+    /** At most this many notes are reported (the strongest ones); null for no limit. */
+    val maxNotes: Int? = null,
 )
 
 /** A note currently sounding, with its relative strength 0..1. */
@@ -126,7 +128,9 @@ class ChordEngine(private val sampleRate: Int) {
     private fun analyze(config: EngineConfig): LiveState {
         val levelDb = Spectrum.rmsDb(frame, WINDOW - HOP, WINDOW)
         val frameDb = Spectrum.rmsDb(frame, WINDOW - WINDOW / 2, WINDOW)
-        val params = DetectionParams.forSensitivity(config.sensitivity)
+        val params = DetectionParams.forSensitivity(config.sensitivity).let { p ->
+            config.maxNotes?.let { p.copy(maxNotes = minOf(p.maxNotes, it.coerceAtLeast(1))) } ?: p
+        }
 
         val detected = if (filled >= WINDOW / 2 && frameDb >= config.noiseGateDb) {
             spectrum.analyze(frame)
@@ -167,7 +171,11 @@ class ChordEngine(private val sampleRate: Int) {
         }
         if (onset) framesSinceOnset = 0 else framesSinceOnset++
 
-        val notes = (0 until MIDI_NOTES).filter { active[it] }
+        var notes = (0 until MIDI_NOTES).filter { active[it] }
+        // Notes still fading from an earlier frame can add up to more than the limit; keep the strongest.
+        config.maxNotes?.let { limit ->
+            if (notes.size > limit) notes = notes.sortedByDescending { salience[it] }.take(limit.coerceAtLeast(1)).sorted()
+        }
         val maxSal = notes.maxOfOrNull { salience[it] }?.takeIf { it > 0 } ?: 1.0
         val weights = notes.map { (salience[it] / maxSal).coerceIn(0.0, 1.0) }
         settle(name(notes, weights), config)
