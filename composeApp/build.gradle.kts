@@ -69,7 +69,7 @@ if (buildAndroid) {
             minSdk = libs.versions.android.minSdk.get().toInt()
             targetSdk = libs.versions.android.targetSdk.get().toInt()
             versionCode = 1
-            versionName = "1.0.1"
+            versionName = "1.0.2"
         }
         packaging {
             resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" }
@@ -95,7 +95,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Dmg, TargetFormat.Deb)
             packageName = "Dechorder"
-            packageVersion = "1.0.1"
+            packageVersion = "1.0.2"
             description = "Listens to music and names the chords being played"
             modules("java.desktop", "java.prefs")
             windows {
